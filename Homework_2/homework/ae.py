@@ -164,9 +164,10 @@ class PatchAutoEncoder(torch.nn.Module, PatchAutoEncoderBase):
         minimize (or even just visualize).
         You can return an empty dictionary if you don't have any additional terms.
         """
+        x_orig = x
         x = self.encode(x)
         z = self.decode(x)
-        loss_dict = {"L2": ((z - x)**2).mean()}
+        loss_dict = {"L2": ((z - x_orig)**2).mean()}
 
         return z, loss_dict
 
