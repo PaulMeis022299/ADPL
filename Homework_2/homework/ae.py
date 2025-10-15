@@ -160,10 +160,10 @@ class PatchAutoEncoder(torch.nn.Module, PatchAutoEncoderBase):
         self.apply(self._init_weights)
 
     def _init_weights(self, m):
-    if isinstance(m, (torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear)):
-        torch.nn.init.xavier_uniform_(m.weight)
-        if m.bias is not None:
-            torch.nn.init.zeros_(m.bias)
+        if isinstance(m, (torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear)):
+            torch.nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                torch.nn.init.zeros_(m.bias)
     
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
