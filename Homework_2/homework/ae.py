@@ -1,7 +1,6 @@
 import abc
 import torch
 
-
 def load() -> torch.nn.Module:
     from pathlib import Path
 
@@ -122,6 +121,7 @@ class PatchAutoEncoder(torch.nn.Module, PatchAutoEncoderBase):
                 torch.nn.GELU(),
             )
 
+
         def forward(self, x: torch.Tensor) -> torch.Tensor:
             # x: (B, H, W, 3)
             x = self.patchify(x)  # (B, H//patch_size, W//patch_size, latent_dim)
@@ -157,7 +157,14 @@ class PatchAutoEncoder(torch.nn.Module, PatchAutoEncoderBase):
         self.encoder = self.PatchEncoder(patch_size, latent_dim, bottleneck)
         self.decoder = self.PatchDecoder(patch_size, latent_dim, bottleneck)
 
+        self.apply(self._init_weights)
 
+    def _init_weights(self, m):
+    if isinstance(m, (torch.nn.Conv2d, torch.nn.ConvTranspose2d, torch.nn.Linear)):
+        torch.nn.init.xavier_uniform_(m.weight)
+        if m.bias is not None:
+            torch.nn.init.zeros_(m.bias)
+    
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
         """
         Return the reconstructed image and a dictionary of additional loss terms you would like to
