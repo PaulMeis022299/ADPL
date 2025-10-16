@@ -104,14 +104,16 @@ class BSQPatchAutoEncoder(PatchAutoEncoder, Tokenizer):
     """
 
     def __init__(self, patch_size: int = 5, latent_dim: int = 128, codebook_bits: int = 10):
-        super().__init__(patch_size=patch_size, latent_dim=latent_dim)
+        super().__init__(patch_size=patch_size, latent_dim=latent_dim, bottleneck=latent_dim)
         self.bsq = BSQ(codebook_bits=codebook_bits, embedding_dim=latent_dim)
 
     def encode_index(self, x: torch.Tensor) -> torch.Tensor:
-        return self.bsq.encode_index(x)
+        x_enc = self.encoder(x)
+        return self.bsq.encode_index(x_enc)
 
     def decode_index(self, x: torch.Tensor) -> torch.Tensor:
-        return self.bsq.decode_index(x)
+        emb = self.bsq.decode_index(x)
+        return self.decoder(emb)
 
     def encode(self, x: torch.Tensor) -> torch.Tensor:
         # get patch level features
