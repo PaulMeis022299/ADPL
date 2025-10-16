@@ -46,7 +46,8 @@ class Tokenizer(abc.ABC):
 class BSQ(torch.nn.Module):
     def __init__(self, codebook_bits: int, embedding_dim: int):
         super().__init__()
-        #self._codebook_bits = codebook_bits
+        # store the number of bits for later use in _index_to_code
+        self._codebook_bits = codebook_bits
         # linear projection down to codebook_bits (binary bottelneck)
         self.project_down = torch.nn.Linear(embedding_dim, codebook_bits, bias=False)
         # linear projection back up to embedding_dim
@@ -125,7 +126,9 @@ class BSQPatchAutoEncoder(PatchAutoEncoder, Tokenizer):
         B, H, W, C = x.shape
         x_flat = x.reshape(B * H * W, C)
         x_dec = self.bsq.decode(x_flat)
-        x_dec = x_dec.reshape(B, H, W, C)
+        # x_dec has shape (B*H*W, embedding_dim) after decoding; reshape using that dim
+        embedding_dim = x_dec.shape[-1]
+        x_dec = x_dec.reshape(B, H, W, embedding_dim)
         return self.decoder(x_dec)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
