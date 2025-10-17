@@ -1,5 +1,4 @@
 import abc
-
 import torch
 
 
@@ -70,8 +69,19 @@ class AutoregressiveModel(torch.nn.Module, Autoregressive):
         ])
 
         self.to_logits = torch.nn.Linear(d_latent, n_tokens)
+    
+        self.apply(self._init_weights)
+
+    def _init_weights(self, m):
+        if isinstance(m, torch.nn.Linear):
+            torch.nn.init.xavier_uniform_(m.weight)
+            if m.bias is not None:
+                torch.nn.init.zeros_(m.bias)
+        elif isinstance(m, torch.nn.Embedding):
+            torch.nn.init.normal_(m.weight, mean=0.0, std=0.02)
 
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, dict[str, torch.Tensor]]:
+        x = x.clamp(0, self.n_tokens - 1).long()
         B, H, W = x.shape
         seq_len = H * W
         # flatten 2D patches to sequence
