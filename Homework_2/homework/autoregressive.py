@@ -82,8 +82,8 @@ class AutoregressiveModel(torch.nn.Module, Autoregressive):
         # shift input by 1 position with dummy at start
         dummy_token = torch.zeros(B, 1, self.d_latent, device=x.device)
         x_shift = torch.cat([dummy_token, x_emb[:, :-1, :]], dim=1)  # (B, seq_len, d_latent)
-        # mask to prevent attention to future tokens
-        mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device) * float('-inf'), diagonal=1)
+        # mask to prevent attention to future tokens using the Transformer helper
+        mask = torch.nn.Transformer.generate_square_subsequent_mask(seq_len).to(device=x.device)
 
         # pass through transformer layers
         h = x_shift
