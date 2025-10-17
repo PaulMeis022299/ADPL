@@ -56,19 +56,22 @@ class AutoregressiveModel(torch.nn.Module, Autoregressive):
         super().__init__()
         self.n_tokens = n_tokens
         self.token_embedding = torch.nn.Embedding(n_tokens, d_latent)
-        self.d_latent = d_latent
+        self.d_latent = 256
 
         # trnsformer layers for decoder
         self.layers = torch.nn.ModuleList([
             torch.nn.TransformerEncoderLayer(
                 d_model=d_latent,
-                nhead=4,
+                nhead=8,
                 dim_feedforward=d_latent * 4,
                 batch_first=True,  # input shape: (B, seq_len, d_model)
-            ) for _ in range(4)
+            ) for _ in range(6)
         ])
 
-        self.to_logits = torch.nn.Linear(d_latent, n_tokens)
+        self.to_logits = torch.nn.Sequential(
+            torch.nn.LayerNorm(d_latent),
+            torch.nn.Linear(d_latent, n_tokens)
+            )
     
         self.apply(self._init_weights)
 
