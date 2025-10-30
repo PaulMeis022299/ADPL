@@ -40,8 +40,8 @@ class CoTModel(BaseLLM):
         ]
 
         for ex in examples:
-            messages.append({"role": "user", "content": f"Question: {ex['Question']}"})
-            messages.append({"role": "assistant", "content": ex["Answer"]})
+            messages.append({"role": "user", "content": f"Question: {ex['question']}"})
+            messages.append({"role": "assistant", "content": ex["answer"]})
 
         # Add the target question
         messages.append({"role": "user", "content": f"Question: {question}"})
