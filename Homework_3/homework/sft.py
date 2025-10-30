@@ -118,7 +118,6 @@ def train_model(
         learning_rate=1e-5,
         save_strategy="epoch",
         save_total_limit= 2,
-        evaluation_strategy="epoch",
         logging_steps=50,
     )
 
