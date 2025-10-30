@@ -115,7 +115,7 @@ def train_model(
         num_train_epochs=5,
         per_device_train_batch_size=32,
         gradient_checkpointing=True,
-        learning_rate=1e-4,
+        learning_rate=1e-3,
         save_strategy="epoch",
         save_total_limit= 2,
         logging_steps=10,
