@@ -28,7 +28,6 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
             [prompt],
             num_return_sequences=oversample,
             temperature=temperature,
-            max_new_tokens=50,
         )
 
         found_any = False
