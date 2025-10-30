@@ -20,7 +20,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     # Load dataset
     data = Dataset("train")
     successful = []
-
+    i = 1
     for q, true_answer in data:
         prompt = cot_model.format_prompt(q)
 
@@ -29,14 +29,20 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
             num_return_sequences=oversample,
             temperature=temperature,
         )
+        
+        flat_outputs = outputs[0]
 
         found_any = False
-        for out in outputs:
-            parsed = cot_model.parse_answer(out)
-            if np.isfinite(parsed) and abs(parsed - true_answer) / (abs(true_answer) + 1e-6) < 1e-3:
-                successful.append([q, true_answer, out])
-                found_any = True
-                break
+
+        for out in flat_outputs:
+          parsed = cot_model.parse_answer(out)
+          if np.isfinite(parsed) and abs(parsed - true_answer) / (abs(true_answer) + 1e-6) < 1e-3:
+            successful.append([q, true_answer, out])
+            found_any = True
+            i += 1
+            print("Sample ", i, " out of ", len(data))
+            break
+
 
     with open(output_json, "w") as f:
         json.dump(successful, f, indent=2)
