@@ -12,8 +12,8 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto", device_map="auto")
 
     # Wrap model in cot_model
-    cot_model = CoTModel().to("cuda")
-    cot_model.model = model
+    cot_model = CoTModel()
+    cot_model.model = model.to("cuda")
     cot_model.tokenizer = tokenizer
     cot_model.model.eval()
 
