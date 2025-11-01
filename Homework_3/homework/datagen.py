@@ -40,7 +40,10 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
             successful.append([q, true_answer, out])
             found_any = True
             i += 1
-            print("Sample ", i, " out of ", len(data))
+            print("Sample ", i, " out of ", len(data),":")
+            to_print = [q, true_answer, out]
+            print(*to_print, sep='\n')
+            print("")
             break
 
 
