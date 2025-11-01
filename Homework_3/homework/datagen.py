@@ -1,13 +1,14 @@
 
 
 def generate_dataset(output_json: str, oversample: int = 10, temperature: float = 0.6):
-    import json, numpy as np
+    import json
     from .cot import CoTModel
     from .data import Dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
     from tqdm import tqdm
     import torch
     from pathlib import Path
+    import math
 
     # Load instruction SmolLM2 model
     model_name = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -37,8 +38,6 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                 temperature=temperature,
             )
 
-        print(len(outputs))
-        print(len(outputs))
 
         for i, (question, true_answer) in enumerate(zip(questions, true_answers)):
             completions = outputs[i]
@@ -53,7 +52,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                 except (IndexError, ValueError):
                     continue
 
-            if selected is not None:
+            if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-3:
                 #print("Parsed: ", parsed)
                 #print("True: ", true_answer)
                 #print('')
