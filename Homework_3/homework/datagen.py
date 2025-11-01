@@ -52,7 +52,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                 except (IndexError, ValueError):
                     continue
 
-            if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-3:
+            if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-2:
                 #print("Parsed: ", parsed)
                 #print("True: ", true_answer)
                 #print('')
