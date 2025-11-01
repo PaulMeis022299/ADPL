@@ -27,7 +27,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
 
     for idx in tqdm(range(0, len(dataset), batch_size), desc="Generating dataset"):
         batch = dataset[idx : idx + batch_size]
-        questions = [q for q, _ in batch]
+        questions = [cot_model.format_prompt(q) for q, _ in batch]
         true_answers = [a for _, a in batch]
 
         with torch.no_grad():
@@ -47,9 +47,6 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                 try:
                     parsed = cot_model.parse_answer(completion)
                     #print("Raw: ", completion)
-                    print("Parsed: ", parsed)
-                    print("True: ", true_answer)
-                    print('')
                     if parsed == true_answer:
                         selected = completion
                         break
@@ -57,6 +54,9 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                     continue
 
             if selected is not None:
+                #print("Parsed: ", parsed)
+                #print("True: ", true_answer)
+                #print('')
                 generated_data.append([dataset[idx + i][0], true_answer, selected])
 
     output_path = Path(output_json)
