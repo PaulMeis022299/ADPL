@@ -20,7 +20,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     # Load dataset
     data = Dataset("train")
     successful = []
-    i = 1
+    i = 0
     for q, true_answer in data:
         prompt = cot_model.format_prompt(q)
 
