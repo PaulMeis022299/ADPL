@@ -5,6 +5,9 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     from .cot import CoTModel
     from .data import Dataset
     from transformers import AutoTokenizer, AutoModelForCausalLM
+    from tqdm import tqdm
+    import torch
+    from pathlib import Path
 
     # Load instruction SmolLM2 model
     model_name = "HuggingFaceTB/SmolLM2-1.7B-Instruct"
@@ -17,40 +20,54 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     cot_model.tokenizer = tokenizer
     cot_model.model.eval()
 
-    # Load dataset
-    data = Dataset("train")
-    successful = []
-    i = 0
-    for q, true_answer in data:
-        prompt = cot_model.format_prompt(q)
+    dataset = Dataset("train")
+    batch_size = 16
 
-        outputs = cot_model.batched_generate(
-            [prompt],
-            num_return_sequences=oversample,
-            temperature=temperature,
-        )
-        
-        flat_outputs = outputs[0]
+    generated_data = []
 
-        found_any = False
+    for idx in tqdm(range(0, len(dataset), batch_size), desc="Generating dataset"):
+        batch = dataset[idx : idx + batch_size]
+        questions = [q for q, _ in batch]
+        true_answers = [a for _, a in batch]
 
-        for out in flat_outputs:
-          parsed = cot_model.parse_answer(out)
-          if np.isfinite(parsed) and abs(parsed - true_answer) / (abs(true_answer) + 1e-6) < 1e-3:
-            successful.append([q, true_answer, out])
-            found_any = True
-            i += 1
-            print("Sample ", i, " out of ", len(data),":")
-            to_print = [q, true_answer, out]
-            print(*to_print, sep='\n')
-            print("")
-            break
+        with torch.no_grad():
+            outputs = cot_model.batched_generate(
+                questions,
+                num_return_sequences=oversample,
+                temperature=temperature,
+            )
+
+        print(len(outputs))
+        print(len(outputs))
+
+        for i, (question, true_answer) in enumerate(zip(questions, true_answers)):
+            completions = outputs[i]
+            selected = None
+            for completion in completions:
+                try:
+                    parsed = cot_model.parse_answer(completion)
+                    #print("Raw: ", completion)
+                    print("Parsed: ", parsed)
+                    print("True: ", true_answer)
+                    print('')
+                    if parsed == true_answer:
+                        selected = completion
+                        break
+                except (IndexError, ValueError):
+                    continue
+
+            if selected is not None:
+                generated_data.append([dataset[idx + i][0], true_answer, selected])
+
+    output_path = Path(output_json)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(generated_data, f, indent=2)
+
+    print(f"Saved {len(generated_data)} examples to {output_json}")
 
 
-    with open(output_json, "w") as f:
-        json.dump(successful, f, indent=2)
-
-    print(f"Saved {len(successful)} / {len(data)} examples to {output_json}")
+   
 
 if __name__ == "__main__":
     from fire import Fire

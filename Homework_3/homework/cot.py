@@ -7,7 +7,16 @@ class CoTModel(BaseLLM):
         Take a question and convert it into a chat template. The LLM will likely answer much
         better if you provide a chat template. self.tokenizer.apply_chat_template can help here
         """
-    
+        '''
+        messages = [
+        {"role": "system", "content": "You convert units. Always return numeric answers in <answer> tags. Be concise."},
+        {"role": "user", "content": "Example: How many grams are in 2 kg?"},
+        {"role": "assistant", "content": "1 kg = 1000 g, so 2 * 1000 = <answer>2000</answer>."},
+        {"role": "user", "content": question},
+    ]'''
+
+
+        
         # 2 examples
         examples = [
             {
@@ -46,7 +55,7 @@ class CoTModel(BaseLLM):
         # Add the target question
         messages.append({"role": "user", "content": f"Question: {question}"})
         
-
+        
         # Apply the SmolLM2 chat template
         prompt = self.tokenizer.apply_chat_template(
             messages,
