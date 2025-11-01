@@ -15,45 +15,8 @@ class CoTModel(BaseLLM):
         {"role": "user", "content": "How much does 5 pounds weigh in kg?"},
         {"role": "assistant", "content": "1 pound = 0.453592 kg. 5 * 0.453592 = 2.26796. Final answer: <answer>2.26796</answer>"},
         {"role": "user", "content": question},
-    ]
-
-
-        '''
-        # 2 examples
-        examples = [
-            {
-                "question": "How many feet are there in 2 meters?",
-                "answer": (
-                    "1 meter = 3.28084 feet. "
-                    "2 * 3.28084 = 6.56168. "
-                    "Final answer: <answer>6.56168</answer>"
-                ),
-            },
-            {
-                "question": "How much does 5 pounds weigh in kilograms?",
-                "answer": (
-                    "1 pound = 0.453592 kilograms. "
-                    "5 * 0.453592 = 2.26796. "
-                    "Final answer: <answer>2.26796</answer>"
-                ),
-            },
         ]
 
-        messages = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a precise reasoning assistant that performs unit conversions. "
-                    "Carefully compute the conversion and return the result as a pure float "
-                    "wrapped in <answer></answer> tags. Be concise."
-                ),
-            },
-        ]
-
-        for ex in examples:
-            messages.append({"role": "user", "content": f"Question: {ex['question']}"})
-            messages.append({"role": "assistant", "content": ex["answer"]})
-        '''
         # Add the target question
         messages.append({"role": "user", "content": f"Question: {question}"})
         
