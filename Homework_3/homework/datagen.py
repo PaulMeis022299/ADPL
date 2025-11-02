@@ -44,27 +44,37 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
             for completion in completions:
               try:
                 parsed = cot_model.parse_answer(completion)
-                #if i < 5:  
-                #  print(f"\n--- QUESTION ---\n{questions[i]}")
-                #  for j, c in enumerate(completions[:3]):
-                #    print(f"[{j}] {c}")
+                # --- DEBUG
+                #if i < 5:
+                #  print(f"\n🧩 Example {i + 1}")
+                #  print(f"Q: {dataset[idx + i][0]}")
+                #  print(f"True: {true_answer:.4g}")
 
-                if not math.isnan(parsed) and abs(parsed - true_answer) / (abs(true_answer) + 1e-8) < 0.02:
-                  selected = completion
+                #  for j, c in enumerate(completions[:3]):
+                #    parsed_val = None
+                #    try:
+                #      parsed_val = cot_model.parse_answer(c)
+                #    except Exception:
+                #      pass
+                #    preview = c.strip().replace("\n", " ")[:120]
+                #    print(f"  [{j}] parsed={parsed_val} | {preview}...")
+                # --- DEBUG
+                if not math.isnan(parsed): 
+                  if abs(parsed - true_answer) / max(abs(true_answer), 1e-6) < 0.05:
+                    selected = completion
+                    generated_data.append([dataset[idx + i][0], true_answer, selected])
                   break
               except (IndexError, ValueError):
                 continue
-
-        if selected is not None:
-          generated_data.append([dataset[idx + i][0], true_answer, selected])
+          
 
         torch.cuda.empty_cache()
 
-    generated_data = [
-    [q, a, r]
-    for (q, a, r) in generated_data
-    if r is not None and isinstance(r, str) and "<answer>" in r
-    ]
+    #generated_data = [
+    #[q, a, r]
+    #for (q, a, r) in generated_data
+    #if r is not None and isinstance(r, str) and "<answer>" in r
+    #]
     output_path = Path(output_json)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
