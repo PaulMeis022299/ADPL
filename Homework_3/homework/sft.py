@@ -90,8 +90,8 @@ def train_model(
     tokenizer = base.tokenizer
 
     lora_config = LoraConfig(
-        r=4,                        
-        lora_alpha=16,              
+        r=2,                        
+        lora_alpha=8,              
         target_modules="all-linear",
         bias="none",
         task_type="CAUSAL_LM",
