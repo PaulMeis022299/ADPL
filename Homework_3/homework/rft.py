@@ -58,7 +58,6 @@ def train_model(
     **kwargs,
 ):
    
-    output_dir = r"rft_model"
     base = BaseLLM()
     model = base.model
     tokenizer = base.tokenizer
