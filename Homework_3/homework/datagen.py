@@ -22,7 +22,7 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
     cot_model.model.eval()
 
     dataset = Dataset("train")
-    batch_size = 16
+    batch_size = 8
 
     generated_data = []
 
@@ -44,7 +44,10 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
             for completion in completions:
               try:
                 parsed = cot_model.parse_answer(completion)
-                if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-2:
+                print("True: ", true_answer)
+                print("Parsed: ", parsed)
+                print("")
+                if not math.isnan(parsed) and abs(parsed - true_answer) / (abs(true_answer) + 1e-8) < 0.02:
                   selected = completion
                   break
               except (IndexError, ValueError):
