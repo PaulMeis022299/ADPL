@@ -7,6 +7,7 @@ from pathlib import Path
 from peft import get_peft_model, LoraConfig, PeftModel
 from transformers import Trainer, TrainingArguments
 import torch
+import json
 
 
 def load() -> BaseLLM:
@@ -28,6 +29,11 @@ def format_example(prompt: str, answer: str, reasoning: str) -> dict[str, str]:
     """
     Construct a question / answerm + reasoning pair
     """
+    #print("Prompt: ", prompt)
+    #print("")
+    #print("Answer: ", answer)
+    #print("")
+    #print("Reasoning: ", reasoning)
     answer_with_reasoning = reasoning.strip()
     return {"question": prompt.strip(), "answer": answer_with_reasoning}
 
@@ -47,6 +53,11 @@ class TokenizedDataset:
 
     def __getitem__(self, idx):
         q, true_ans, reasoning = self.data[idx]
+        #print("Prompt: ", q)
+        #print("")
+        #print("Answer: ", true_ans)
+        #print("")
+        #print("Reasoning: ", reasoning)
         formatted = self.format_fn(q, true_ans, reasoning)
         return tokenize(self.tokenizer, formatted["question"], formatted["answer"])
 
@@ -75,9 +86,13 @@ def train_model(
     if torch.cuda.is_available():
         model.enable_input_require_grads()
 
-    train_data = Dataset("rft")
+    with open("data/rft.json", "r") as f:
+      train_data = json.load(f)
+    train_data = [(q, a, r) for q, a, r in train_data]
 
     train_dataset = TokenizedDataset(tokenizer, train_data, format_example)
+
+
 
     args = TrainingArguments(
         output_dir=output_dir,
