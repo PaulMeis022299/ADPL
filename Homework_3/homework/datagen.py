@@ -38,26 +38,28 @@ def generate_dataset(output_json: str, oversample: int = 10, temperature: float 
                 temperature=temperature,
             )
 
-
         for i, (question, true_answer) in enumerate(zip(questions, true_answers)):
             completions = outputs[i]
             selected = None
             for completion in completions:
-                try:
-                    parsed = cot_model.parse_answer(completion)
-                    #print("Raw: ", completion)
-                    if parsed == true_answer:
-                        selected = completion
-                        break
-                except (IndexError, ValueError):
-                    continue
+              try:
+                parsed = cot_model.parse_answer(completion)
+                if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-2:
+                  selected = completion
+                  break
+              except (IndexError, ValueError):
+                continue
 
-            if not math.isnan(parsed) and abs(parsed - true_answer) < 1e-2:
-                #print("Parsed: ", parsed)
-                #print("True: ", true_answer)
-                #print('')
-                generated_data.append([dataset[idx + i][0], true_answer, selected])
+        if selected is not None:
+          generated_data.append([dataset[idx + i][0], true_answer, selected])
 
+        torch.cuda.empty_cache()
+
+    generated_data = [
+    [q, a, r]
+    for (q, a, r) in generated_data
+    if r is not None and isinstance(r, str) and "<answer>" in r
+    ]
     output_path = Path(output_json)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
