@@ -45,24 +45,25 @@ class BaseLLM:
         """
         
         # tokenize the prompt with self.tokenizer
-        inputs =  self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        inputs = self.tokenizer(prompt, return_tensors="pt")
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
 
         # call self.model.generate
         outputs = self.model.generate(
         **inputs,
-        max_new_tokens = 50,
-        do_sample=True,
-        top_p = 0.9,
+        max_new_tokens = 256,
+        do_sample=False,
+        #top_p = 0.9,
         eos_token_id=self.tokenizer.eos_token_id,
         )
 
         # decode the outputs with self.tokenizer.decode
         generated_tokens = outputs[:, inputs["input_ids"].shape[1]:]
         decoded = self.tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
-        
+        print(decoded)
         return decoded.strip()
         
-        #return self.batched_generate(prompt)[0]
 
     @overload
     def batched_generate(
