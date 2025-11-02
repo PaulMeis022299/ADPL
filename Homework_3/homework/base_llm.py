@@ -43,7 +43,7 @@ class BaseLLM:
         - decode the outputs with self.tokenizer.decode
 
         """
-        '''
+        
         # tokenize the prompt with self.tokenizer
         inputs =  self.tokenizer(prompt, return_tensors="pt").to(self.device)
 
@@ -61,8 +61,8 @@ class BaseLLM:
         decoded = self.tokenizer.decode(generated_tokens[0], skip_special_tokens=True)
         
         return decoded.strip()
-        '''
-        return self.batched_generate(prompt)[0]
+        
+        #return self.batched_generate(prompt)[0]
 
     @overload
     def batched_generate(
