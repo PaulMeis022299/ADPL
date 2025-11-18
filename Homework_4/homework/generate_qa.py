@@ -357,7 +357,7 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
         name = kart["kart_name"]
         left_right = left_or_right(kart)
         front_behind = front_or_behind(kart)
-        relative = f"{front_behind} and to the {left_right}"
+        relative = f"{front_behind} and {left_right}"
 
         # Left/Right
         qa_pairs.append({
@@ -462,7 +462,6 @@ def generate_all_qa_pairs(data_dir: str, output_file: str):
 
         for view_index in range(10):
 
-            
             qa_pairs = generate_qa_pairs(info_path, view_index)
             if len(qa_pairs) == 0:
                 continue
