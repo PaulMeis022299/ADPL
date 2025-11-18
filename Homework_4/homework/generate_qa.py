@@ -404,6 +404,7 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
         "answer": str(behind_count)
     })
     
+    return qa_pairs
 
 
 def check_qa_pairs(info_file: str, view_index: int):
