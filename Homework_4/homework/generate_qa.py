@@ -303,6 +303,16 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
     ego_name = ego["kart_name"]
     ego_x, ego_y = ego["center"]
 
+    
+    # If no karts detected - return track-only QA pair
+    # per Caitlin Tracht on ED for filtering QA
+    if len(karts) == 0:
+        qa_pairs.append({
+            "question": "What track is this?",
+            "answer": track_name
+        })
+        return qa_pairs
+
     # -------------------------------------------------------
     # 1. EGO KART QUESTION
     # -------------------------------------------------------
