@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import os
 
 import fire
 import matplotlib.pyplot as plt
@@ -303,7 +304,7 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
     ego_name = ego["kart_name"]
     ego_x, ego_y = ego["center"]
 
-    
+
     # If no karts detected - return track-only QA pair
     # per Caitlin Tracht on ED for filtering QA
     if len(karts) == 0:
@@ -442,6 +443,40 @@ def check_qa_pairs(info_file: str, view_index: int):
         print("-" * 50)
 
 
+def generate_all_qa_pairs(data_dir: str, output_file: str):
+    """
+    Generate QA pairs for all info.json files in a directory.
+    """
+    qa_output = []
+
+    for file in sorted(os.listdir(data_dir)):
+        if not file.endswith("_info.json"):
+            continue
+
+        info_path = os.path.join(data_dir, file)
+        frame_id = file.split("_")[0]
+
+        for view_index in range(10):
+
+            
+            qa_pairs = generate_qa_pairs(info_path, view_index)
+            image_file = f"{frame_id}_{view_index:02d}_im.jpg"
+
+            for qa in qa_pairs:
+                qa_output.append({
+                    "question": qa["question"],
+                    "answer": qa["answer"],
+                    "image_file": image_file
+                })
+
+    
+    with open(output_file, "w") as f:
+        json.dump(qa_output, f, indent=2)
+
+    print(f"Saved {len(qa_output)} training QA examples to {output_file}")
+
+
+
 """
 Usage Example: Visualize QA pairs for a specific file and view:
    python generate_qa.py check --info_file ../data/valid/00000_info.json --view_index 0
@@ -451,7 +486,10 @@ You probably need to add additional commands to Fire below.
 
 
 def main():
-    fire.Fire({"check": check_qa_pairs})
+    fire.Fire({
+        "check": check_qa_pairs,
+        "generate": generate_all_qa_pairs
+    })
 
 
 if __name__ == "__main__":
