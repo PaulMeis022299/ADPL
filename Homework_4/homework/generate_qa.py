@@ -297,14 +297,6 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
     karts = extract_kart_objects(info_path, view_index, img_width, img_height)
     track_name = extract_track_info(info_path)
 
-    for k in karts:
-        if k["is_center_kart"]:
-            ego = k
-
-    ego_name = ego["kart_name"]
-    ego_x, ego_y = ego["center"]
-
-
     # If no karts detected - return track-only QA pair
     # per Caitlin Tracht on ED for filtering QA
     if len(karts) == 0:
@@ -313,6 +305,18 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
             "answer": track_name
         })
         return qa_pairs
+
+    ego = None
+    for k in karts:
+        if k["is_center_kart"]:
+            ego = k
+
+    if ego == None:
+        return qa_pairs
+
+    ego_name = ego["kart_name"]
+    ego_x, ego_y = ego["center"]
+
 
     # -------------------------------------------------------
     # 1. EGO KART QUESTION
@@ -460,6 +464,8 @@ def generate_all_qa_pairs(data_dir: str, output_file: str):
 
             
             qa_pairs = generate_qa_pairs(info_path, view_index)
+            if len(qa_pairs) == 0:
+                continue
             image_file = f"{frame_id}_{view_index:02d}_im.jpg"
 
             for qa in qa_pairs:
