@@ -192,6 +192,8 @@ def train(
         save_total_limit=2,
         label_names=["labels"],
         dataloader_num_workers=num_workers,
+        lr_scheduler_type="cosine",
+        warmup_ratio=0.02
     )
 
     # Initialize trainer
