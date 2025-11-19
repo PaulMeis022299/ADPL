@@ -284,9 +284,9 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
         x = kart["center"][0]
         return "left" if x < ego_x else "right"
 
-    def front_or_behind(kart):
+    def front_or_back(kart):
         y = kart["center"][1]
-        return "front" if y < ego_y else "behind"
+        return "front" if y < ego_y else "back"
 
 
     qa_pairs = []
@@ -356,8 +356,8 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
 
         name = kart["kart_name"]
         left_right = left_or_right(kart)
-        front_behind = front_or_behind(kart)
-        relative = f"{front_behind} and {left_right}"
+        front_back = front_or_back(kart)
+        relative = f"{front_back} and {left_right}"
 
         # Left/Right
         qa_pairs.append({
@@ -365,10 +365,10 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
             "answer": left_right
         })
 
-        # Front/Behind
+        # Front/Back
         qa_pairs.append({
             "question": f"Is {name} in front of or behind the ego car?",
-            "answer": front_behind
+            "answer": front_back
         })
 
         # Relative question
@@ -384,7 +384,7 @@ def generate_qa_pairs(info_path: str, view_index: int, img_width: int = 150, img
             right_count += 1
 
         # To the front/behind
-        if front_behind == "front":
+        if front_back == "front":
             front_count += 1
         else:
             behind_count += 1
