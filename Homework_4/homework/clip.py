@@ -114,7 +114,12 @@ class CLIP(nn.Module):
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         return self.vision_encoder(image)
 
-    def encode_text(self, text: str) -> torch.Tensor:
+    def encode_text(self, text: str, attention_mask: torch.Tensor | None = None) -> torch.Tensor:
+        outputs = None
+        try:
+            outputs = self.text_encoder(text, attention_mask=attention_mask, return_dict=True)
+        except TypeError:
+            outputs = self.text_encoder(text, attention_mask)
         return self.text_encoder(text)
 
     def save_pretrained(self, save_directory: str, **kwargs):
