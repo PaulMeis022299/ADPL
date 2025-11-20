@@ -4,7 +4,10 @@ import json
 import fire
 from matplotlib import pyplot as plt
 
-from .generate_qa import draw_detections, extract_frame_info
+from generate_qa import draw_detections, extract_frame_info, extract_kart_objects
+
+ORIGINAL_WIDTH = 600
+ORIGINAL_HEIGHT = 400
 
 
 def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_height: int = 100) -> list:
@@ -34,6 +37,13 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     # ------------------------------------------------------------
     # GET CORRECT VIEW DATA
     # ------------------------------------------------------------
+    karts = extract_kart_objects(str(info_path), view_index, img_width, img_height)
+
+    base = info_path.stem.replace("_info", "")
+    image_file = f"{base}_{view_index:02d}_im.jpg"
+
+    captions = []
+
     views = info["views"]
     view = views[view_index]
     karts = view["karts"] 
@@ -50,23 +60,26 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     # -------------------------------------------------------
     # 1. EGO KART QUESTION
     # -------------------------------------------------------
-    captions.append({
-        "image_file": image_file,
-        "caption": f"{ego_name} is the ego car."
-    })
+    ego = next((k for k in karts if k["is_center_kart"]), None)
+    if ego:
+        captions.append({
+            "image_file": image_file,
+            "caption": f"{ego['kart_name']} is the ego car."
+        })
+
 
     # -------------------------------------------------------
     # 2. COUNTING CAPTION
     # -------------------------------------------------------
-    num_karts = len(karts)
     captions.append({
         "image_file": image_file,
-        "caption": f"There are {num_karts} karts in the scene."
+        "caption": f"There are {len(karts)} karts in the scene."
     })
 
     # -------------------------------------------------------
     # 3. TRACK NAME CAPTION
     # -------------------------------------------------------
+    track_name = info.get("track", "unknown track")
     captions.append({
         "image_file": image_file,
         "caption": f"The track is {track_name}."
@@ -75,42 +88,36 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     # -------------------------------------------------------
     # 4. RELATIVE POSITION CAPTION
     # -------------------------------------------------------
-    ego_obj = [k for k in karts if k["kart_id"] == ego_id]
-    if not ego_obj:
-        return captions
-    ego_obj = ego_obj[0]
-    ego_x, ego_y = ego_obj["center"]
+    if ego:
+        ego_x, ego_y = ego["center"]
+        for kart in karts:
+            if kart == ego:
+                continue
+            x, y = kart["center"]
 
-    for kart in karts:
-        if kart["kart_id"] == ego_id:
-            continue
+            # left / right
+            if x < ego_x:
+                captions.append({
+                    "image_file": image_file,
+                    "caption": f"{kart['kart_name']} is left of the ego car."
+                })
+            else:
+                captions.append({
+                    "image_file": image_file,
+                    "caption": f"{kart['kart_name']} is right of the ego car."
+                })
 
-        name = kart_names[kart["kart_id"]]
-        x, y = kart["center"]
-
-        # left / right
-        if x < ego_x:
-            captions.append({
-                "image_file": image_file,
-                "caption": f"{name} is left of the ego car."
-            })
-        else:
-            captions.append({
-                "image_file": image_file,
-                "caption": f"{name} is right of the ego car."
-            })
-
-        # front / behind
-        if y < ego_y:
-            captions.append({
-                "image_file": image_file,
-                "caption": f"{name} is in front of the ego car."
-            })
-        else:
-            captions.append({
-                "image_file": image_file,
-                "caption": f"{name} is behind the ego car."
-            })
+            # front / behind
+            if y < ego_y:
+                captions.append({
+                    "image_file": image_file,
+                    "caption": f"{kart['kart_name']} is in front of the ego car."
+                })
+            else:
+                captions.append({
+                    "image_file": image_file,
+                    "caption": f"{kart['kart_name']} is behind the ego car."
+                })
     return captions
 
 
