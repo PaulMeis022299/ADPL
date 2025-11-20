@@ -43,19 +43,6 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
     image_file = f"{base}_{view_index:02d}_im.jpg"
 
     captions = []
-
-    views = info["views"]
-    view = views[view_index]
-    karts = view["karts"] 
-    track_name = view["track_name"]
-    ego_id = view["ego"]["kart_id"]
-    kart_names = view["kart_names"] 
-    ego_name = kart_names[ego_id]
-
-    base = info_path.stem.replace("_info", "")
-    image_file = f"{base}_{view_index:02d}_im.jpg"
-
-    captions = []
     
     # -------------------------------------------------------
     # 1. EGO KART QUESTION
