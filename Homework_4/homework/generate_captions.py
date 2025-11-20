@@ -41,6 +41,7 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
 
     base = info_path.stem.replace("_info", "")
     image_file = f"{base}_{view_index:02d}_im.jpg"
+    image_file = "train/" + image_file
 
     captions = []
     
