@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Any
+import math
 
 import torch
 import torch.nn as nn
@@ -101,8 +102,15 @@ class CLIP(nn.Module):
         super().__init__()
         self.vision_encoder = vision_encoder
         self.text_encoder = text_encoder
-        # TODO: implement the rest components
-        raise NotImplementedError("Not implemented")
+        
+        vision_dim = vision_encoder.config.hidden_size
+        text_dim = text_encoder.config.hidden_size
+
+        self.image_projection = nn.Linear(vision_dim, proj_dim, bias=False)
+        self.text_projection = nn.Linear(text_dim, proj_dim, bias=False)
+
+        # Temperature parameter
+        self.logit_scale = nn.Parameter(torch.tensor(math.log(1 / temperature)))
 
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         return self.vision_encoder(image)
@@ -180,7 +188,18 @@ class CLIP(nn.Module):
         Returns:
             TODO: think about the what values should be returned
         """
-        raise NotImplementedError("Not implemented")
+        image_features = self.encode_image(pixel_values)         # [B, vision_dim]
+        text_features = self.encode_text(input_ids, attention_mask)  # [B, text_dim]
+
+        # Project into shared embedding space
+        image_embeds = self.image_projection(image_features)     # [B, proj_dim]
+        text_embeds = self.text_projection(text_features)        # [B, proj_dim]
+
+        # Normalize embeddings
+        image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True)
+        text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True)
+
+        return image_embeds, text_embeds, self.logit_scale
 
 
 def compute_clip_loss(
@@ -199,7 +218,18 @@ def compute_clip_loss(
     Returns:
         The loss for the CLIP model.
     """
-    raise NotImplementedError("Not implemented")
+    image_embeds, text_embeds, logit_scale = outputs
+    batch_size = image_embeds.size(0)
+
+    logits_per_image = logit_scale.exp() * image_embeds @ text_embeds.t()  # [B, B]
+    logits_per_text  = logits_per_image.t()                                 # [B, B]
+
+    target = torch.arange(batch_size, device=image_embeds.device)
+
+    loss_img = torch.nn.functional.cross_entropy(logits_per_image, target)
+    loss_txt = torch.nn.functional.cross_entropy(logits_per_text, target)
+
+    return (loss_img + loss_txt) / 2
 
 
 def get_target_modules_for_lora(model: nn.Module) -> list[str]:

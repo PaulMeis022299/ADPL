@@ -1,4 +1,5 @@
 from pathlib import Path
+import json
 
 import fire
 from matplotlib import pyplot as plt
@@ -21,8 +22,96 @@ def generate_caption(info_path: str, view_index: int, img_width: int = 150, img_
 
     # 4. Relative position
     # {kart_name} is {position} of the ego car.
+    
+    # ------------------------------------------------------------
+    # LOAD JSON
+    # ------------------------------------------------------------
+    info_path = Path(info_path)
+    with open(info_path, "r") as f:
+        info = json.load(f)
 
-    raise NotImplementedError("Not implemented")
+
+    # ------------------------------------------------------------
+    # GET CORRECT VIEW DATA
+    # ------------------------------------------------------------
+    views = info["views"]
+    view = views[view_index]
+    karts = view["karts"] 
+    track_name = view["track_name"]
+    ego_id = view["ego"]["kart_id"]
+    kart_names = view["kart_names"] 
+    ego_name = kart_names[ego_id]
+
+    base = info_path.stem.replace("_info", "")
+    image_file = f"{base}_{view_index:02d}_im.jpg"
+
+    captions = []
+    
+    # -------------------------------------------------------
+    # 1. EGO KART QUESTION
+    # -------------------------------------------------------
+    captions.append({
+        "image_file": image_file,
+        "caption": f"{ego_name} is the ego car."
+    })
+
+    # -------------------------------------------------------
+    # 2. COUNTING CAPTION
+    # -------------------------------------------------------
+    num_karts = len(karts)
+    captions.append({
+        "image_file": image_file,
+        "caption": f"There are {num_karts} karts in the scene."
+    })
+
+    # -------------------------------------------------------
+    # 3. TRACK NAME CAPTION
+    # -------------------------------------------------------
+    captions.append({
+        "image_file": image_file,
+        "caption": f"The track is {track_name}."
+    })
+
+    # -------------------------------------------------------
+    # 4. RELATIVE POSITION CAPTION
+    # -------------------------------------------------------
+    ego_obj = [k for k in karts if k["kart_id"] == ego_id]
+    if not ego_obj:
+        return captions
+    ego_obj = ego_obj[0]
+    ego_x, ego_y = ego_obj["center"]
+
+    for kart in karts:
+        if kart["kart_id"] == ego_id:
+            continue
+
+        name = kart_names[kart["kart_id"]]
+        x, y = kart["center"]
+
+        # left / right
+        if x < ego_x:
+            captions.append({
+                "image_file": image_file,
+                "caption": f"{name} is left of the ego car."
+            })
+        else:
+            captions.append({
+                "image_file": image_file,
+                "caption": f"{name} is right of the ego car."
+            })
+
+        # front / behind
+        if y < ego_y:
+            captions.append({
+                "image_file": image_file,
+                "caption": f"{name} is in front of the ego car."
+            })
+        else:
+            captions.append({
+                "image_file": image_file,
+                "caption": f"{name} is behind the ego car."
+            })
+    return captions
 
 
 def check_caption(info_file: str, view_index: int):
@@ -47,6 +136,35 @@ def check_caption(info_file: str, view_index: int):
     plt.show()
 
 
+
+
+def generate_all_captions(data_dir: str, output_file: str):
+    data_dir = Path(data_dir)
+    all_captions = []
+
+    info_files = sorted(list(data_dir.glob("*_info.json")))
+
+    for info_path in info_files:
+        for view_index in range(10):
+            try:
+                captions = generate_caption(str(info_path), view_index)
+
+                if captions:
+                    all_captions.extend(captions)
+
+            except Exception as e:
+                print(f"[WARN] Skipping {info_path} view {view_index} due to error: {e}")
+                continue
+
+    with open(output_file, "w") as f:
+        json.dump(all_captions, f, indent=2)
+
+    print(f"Saved {len(all_captions)} captions to {output_file}")
+
+
+
+
+
 """
 Usage Example: Visualize QA pairs for a specific file and view:
    python generate_captions.py check --info_file ../data/valid/00000_info.json --view_index 0
@@ -56,7 +174,8 @@ You probably need to add additional commands to Fire below.
 
 
 def main():
-    fire.Fire({"check": check_caption})
+    fire.Fire({"check": check_caption,
+               "generate": generate_all_captions})
 
 
 if __name__ == "__main__":
