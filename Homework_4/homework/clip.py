@@ -192,8 +192,8 @@ class CLIP(nn.Module):
         Returns:
             TODO: think about the what values should be returned
         """
-        image_features = self.encode_image(pixel_values)  # [B, vision_dim]
-        text_features = self.encode_text(input_ids, attention_mask)  # [B, text_dim]
+        image_features = self.encode_image(pixel_values)[0][:, 0, :]  # [B, vision_dim]
+        text_features = self.encode_text(input_ids, attention_mask)[0][:, 0, :]  # [B, text_dim]
 
         image_embeds = self.image_projection(image_features)
         text_embeds = self.text_projection(text_features)
@@ -202,6 +202,8 @@ class CLIP(nn.Module):
         image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
         text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
 
+        #print("IMAGE EMBEDS: ", image_embeds.shape)
+        #print("TEXT EMBEDS: ", text_embeds.shape)
         return image_embeds, text_embeds, self.logit_scale
 
 
