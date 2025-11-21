@@ -205,8 +205,8 @@ class CLIP(nn.Module):
         image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
         text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
 
-        #print("IMAGE EMBEDS: ", image_embeds.shape)
-        #print("TEXT EMBEDS: ", text_embeds.shape)
+        print("IMAGE EMBEDS: ", image_embeds.shape)
+        print("TEXT EMBEDS: ", text_embeds.shape)
         return image_embeds, text_embeds, self.logit_scale
 
 
