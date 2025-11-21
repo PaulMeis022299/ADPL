@@ -71,7 +71,8 @@ class CaptionDatasetForTraining(Dataset):
                 tv.transforms.Resize(192),
                 tv.transforms.RandomResizedCrop(192, scale=(0.5, 1.0)),
                 tv.transforms.ToTensor(),
-                tv.transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                #tv.transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+                tv.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
             ]
         )
         self.processor = processor
@@ -111,9 +112,11 @@ class CLIP(nn.Module):
 
         self.logit_scale = nn.Parameter(torch.tensor(math.log(1 / temperature)))
 
+    '''
     def encode_image(self, image: torch.Tensor) -> torch.Tensor:
         return self.vision_encoder(image)
-
+    '''
+    '''
     def encode_text(self, text: str, attention_mask: torch.Tensor | None = None) -> torch.Tensor:
         outputs = None
         try:
@@ -121,6 +124,7 @@ class CLIP(nn.Module):
         except TypeError:
             outputs = self.text_encoder(text, attention_mask)
         return self.text_encoder(text)
+    '''
 
     def save_pretrained(self, save_directory: str, **kwargs):
         """Customize save method, save additional parameters"""
@@ -192,8 +196,8 @@ class CLIP(nn.Module):
         Returns:
             TODO: think about the what values should be returned
         """
-        image_features = self.encode_image(pixel_values)[0][:, 0, :]  # [B, vision_dim]
-        text_features = self.encode_text(input_ids, attention_mask)[0][:, 0, :]  # [B, text_dim]
+        image_features = self.vision_encoder(pixel_values)[0][:, 0, :]  # [B, vision_dim]
+        text_features = self.text_encoder(input_ids, attention_mask=attention_mask, return_dict=True)[0][:, 0, :] # [B, text_dim]
 
         image_embeds = self.image_projection(image_features)
         text_embeds = self.text_projection(text_features)
