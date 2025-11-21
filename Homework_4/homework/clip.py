@@ -262,9 +262,9 @@ def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
     num_train_epochs: float = 0.2,  # for debugging purpose, increase this once the dry run works
-    per_device_train_batch_size: int = 32,
-    gradient_accumulation_steps: int = 2,
-    learning_rate: float = 5e-4,
+    per_device_train_batch_size: int = 64,
+    gradient_accumulation_steps: int = 1,
+    learning_rate: float = 1e-4, #5e-4,
     num_workers: int = 16,
 ):
     vlm = BaseVLM()
