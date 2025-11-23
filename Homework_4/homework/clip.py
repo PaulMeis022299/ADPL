@@ -205,8 +205,8 @@ class CLIP(nn.Module):
         image_embeds = image_embeds / image_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
         text_embeds = text_embeds / text_embeds.norm(dim=-1, keepdim=True).clamp_min(1e-9)
 
-        print("IMAGE EMBEDS: ", image_embeds.shape)
-        print("TEXT EMBEDS: ", text_embeds.shape)
+        #print("IMAGE EMBEDS: ", image_embeds.shape)
+        #print("TEXT EMBEDS: ", text_embeds.shape)
         return image_embeds, text_embeds, self.logit_scale
 
 
@@ -261,8 +261,8 @@ def get_target_modules_for_lora(model: nn.Module) -> list[str]:
 def train(
     data_dir: Path | None = None,
     output_dir: str = "clip",
-    num_train_epochs: float = 0.2,  # for debugging purpose, increase this once the dry run works
-    per_device_train_batch_size: int = 64,
+    num_train_epochs: float = 0.3,  # for debugging purpose, increase this once the dry run works
+    per_device_train_batch_size: int = 128,
     gradient_accumulation_steps: int = 1,
     learning_rate: float = 1e-4, #5e-4,
     num_workers: int = 16,
@@ -281,7 +281,7 @@ def train(
     vision_encoder = vlm.model.model.vision_model
     text_encoder = vlm.model.model.text_model
     model = CLIP(vision_encoder, text_encoder).to(device).bfloat16()
-    model.set_trainable_parameters()
+    
 
     peft_config = LoraConfig(
         task_type=TaskType.FEATURE_EXTRACTION,
@@ -292,13 +292,16 @@ def train(
         # target_modules="all-linear",
         target_modules=get_target_modules_for_lora(model),
         bias="none",
+        modules_to_save=["image_projection", "text_projection"],
     )
     model = get_peft_model(model, peft_config)
     model.print_trainable_parameters()
+    model.set_trainable_parameters()
     model.to(device)
     model.train()
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
+    
 
     # load dataset
     train_dataset = CaptionDataset("train", data_dir)
